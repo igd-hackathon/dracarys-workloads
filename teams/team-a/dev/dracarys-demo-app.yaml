@@ -75,18 +75,18 @@ spec:
             {}
 ---
 # Source: dracarys-app/templates/tests/test-connection.yaml
-apiVersion: v1
-kind: Pod
-metadata:
-  name: "release-name-dracarys-app-test-connection"
-  labels:
-    app.kubernetes.io/name: dracarys-app
-    app.kubernetes.io/instance: release-name
-    app.kubernetes.io/version: "1.16.0"
-spec:
-  containers:
-    - name: wget
-      image: busybox
-      command: ['wget']
-      args: ['release-name-dracarys-app:80']
-  restartPolicy: Never
+# apiVersion: v1
+# kind: Pod
+# metadata:
+#   name: "release-name-dracarys-app-test-connection"
+#   labels:
+#     app.kubernetes.io/name: dracarys-app
+#     app.kubernetes.io/instance: release-name
+#     app.kubernetes.io/version: "1.16.0"
+# spec:
+#   containers:
+#     - name: wget
+#       image: busybox
+#       command: ['wget']
+#       args: ['release-name-dracarys-app:80']
+#   restartPolicy: Never
