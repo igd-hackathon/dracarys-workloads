@@ -88,5 +88,5 @@ spec:
     - name: wget
       image: busybox
       command: ['wget']
-      args: ['release-name-dracarys-app:80']
+      args: ['release-name-dracarys-app:80/version']
   restartPolicy: Never
