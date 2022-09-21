@@ -1,0 +1,166 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ClusterWorkflowTemplate
+metadata:
+  name: promote
+spec:
+  # serviceAccountName: workflow
+  templates:
+  - name: promote
+    inputs:
+      parameters:
+      - name: environment
+      - name: repo_owner
+      - name: repo_name
+      - name: image_owner
+      - name: image_name
+      - name: tag
+      - name: team_name
+    script:
+      image: vfarcic/kustomize:3.9.2
+      command: [sh]
+      source: |
+        set -e
+        git clone https://$(cat /.github/token)@github.com/{{inputs.parameters.repo_owner}}/{{inputs.parameters.repo_name}}
+        cd {{inputs.parameters.repo_name}}/teams/{{inputs.parameters.team_name}}/
+        sleep 2
+        echo BEFORE:
+        cat {{inputs.parameters.environment}}/dracarys-demo-app.yaml
+        echo AFTER:
+        cat {{inputs.parameters.environment}}/dracarys-demo-app.yaml | sed -e "s@{{inputs.parameters.image_owner}}/{{inputs.parameters.image_name}}:.*@{{inputs.parameters.image_owner}}/{{inputs.parameters.image_name}}:{{inputs.parameters.tag}}@g" | tee {{inputs.parameters.environment}}/dracarys-demo-app.yaml
+        git config user.name "$(cat /.github/user)"
+        git config user.email "$(cat /.github/email)"
+        git add {{inputs.parameters.environment}}/dracarys-demo-app.yaml
+        git commit -m "Upgraded {{inputs.parameters.environment}}/dracarys-demo-app.yaml with the tag {{inputs.parameters.tag}}"
+        git push
+      volumeMounts:
+      - name: github-access
+        mountPath: /.github/
+---
+# Demo CD flow
+apiVersion: argoproj.io/v1alpha1
+kind: Workflow
+metadata:
+  # generateName: non-prod-env-flow-
+  name: dracarys-nonprod-workflow
+  namespace: argo
+spec:
+  entrypoint: nonprod-release
+  # serviceAccountName: workflow
+  volumes:
+  # - name: regcred
+  #   secret:
+  #     secretName: regcred
+  #     items:
+  #       - key: .dockerconfigjson
+  #         path: config.json
+  - name: github-access
+    secret:
+      secretName: github-access
+      items:
+        - key: token
+          path: token
+        - key: user
+          path: user
+        - key: email
+          path: email
+  templates:
+  - name: nonprod-release
+    dag:
+      tasks:
+      - name: promote-development
+        templateRef:
+          name: promote
+          template: promote
+          clusterScope: true
+        arguments:
+          parameters:
+          - name: environment
+            value: dev
+          - name: repo_owner
+            value: igd-hackathon
+          - name: repo_name
+            value: dracarys-workloads
+          - name: image_owner
+            value: dracarys
+          - name: image_name
+            value: "small-go-app"
+          - name: tag
+            value: "2.0"
+          - name: team_name
+            value: team-a
+        # dependencies:
+        # - dev-test-functional
+        # - test-integration
+      - name: promote-sit
+        templateRef:
+          name: promote
+          template: promote
+          clusterScope: true
+        arguments:
+          parameters:
+          - name: environment
+            value: sit
+          - name: repo_owner
+            value: igd-hackathon
+          - name: repo_name
+            value: dracarys-workloads
+          - name: image_owner
+            value: dracarys
+          - name: image_name
+            value: "small-go-app"
+          - name: tag
+            value: "2.0"
+          - name: team_name
+            value: team-a
+        dependencies:
+        - dev-test-functional
+        # - test-integration
+      - name: promote-staging
+        templateRef:
+          name: promote
+          template: promote
+          clusterScope: true
+        arguments:
+          parameters:
+          - name: environment
+            value: stg
+          - name: repo_owner
+            value: igd-hackathon
+          - name: repo_name
+            value: dracarys-workloads
+          - name: image_owner
+            value: dracarys
+          - name: image_name
+            value: "small-go-app"
+          - name: tag
+            value: "2.0"
+          - name: team_name
+            value: team-a
+        dependencies:
+        - sit-test-integration
+      - name: dev-test-functional
+        template: test
+        dependencies:
+        - promote-development
+      - name: sit-test-integration
+        template: test
+        dependencies:
+        - promote-sit
+      - name: stg-test-functional
+        template: test
+        dependencies:
+        - promote-staging
+      - name: stg-test-integration
+        template: test
+        dependencies:
+        - promote-staging
+  - name: test
+    script:
+      image: alpine
+      command: [sh]
+      source: |
+        echo This is a testing simulation...
+        sleep 5
+      volumeMounts:
+      - name: github-access
+        mountPath: /.github/
