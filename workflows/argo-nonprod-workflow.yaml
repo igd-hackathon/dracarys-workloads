@@ -32,6 +32,8 @@ spec:
         git add {{inputs.parameters.environment}}/dracarys-demo-app.yaml
         git commit -m "Upgraded {{inputs.parameters.environment}}/dracarys-demo-app.yaml with the tag {{inputs.parameters.tag}}"
         git push
+        echo Waiting for ArgoCD app to Sync
+        sleep 20
       volumeMounts:
       - name: github-access
         mountPath: /.github/
