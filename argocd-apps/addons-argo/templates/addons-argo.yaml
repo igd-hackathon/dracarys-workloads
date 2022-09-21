@@ -3,8 +3,8 @@ kind: Application
 metadata:
   name: addons-argo
   namespace: argocd
-  finalizers:
-  - resources-finalizer.argocd.argoproj.io
+  # finalizers:
+  # - resources-finalizer.argocd.argoproj.io
 spec:
   project: default
   destination:
@@ -18,5 +18,6 @@ spec:
     automated:
       prune: true
       selfHeal: true
+      allowEmpty: true
     syncOptions:
     - CreateNamespace=true
