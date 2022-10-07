@@ -26,7 +26,7 @@ spec:
         echo BEFORE:
         cat {{inputs.parameters.environment}}/dracarys-demo-app.yaml
         echo AFTER:
-        cat {{inputs.parameters.environment}}/dracarys-demo-app.yaml | sed -e "s|{{inputs.parameters.image_owner}}/{{inputs.parameters.image_name}}:.*|{{inputs.parameters.image_owner}}/{{inputs.parameters.image_name}}:{{inputs.parameters.tag}}|g" > {{inputs.parameters.environment}}/dracarys-demo-app.yaml
+        cat {{inputs.parameters.environment}}/dracarys-demo-app.yaml | sed -e "s@{{inputs.parameters.image_owner}}/{{inputs.parameters.image_name}}:.*@{{inputs.parameters.image_owner}}/{{inputs.parameters.image_name}}:{{inputs.parameters.tag}}@" > {{inputs.parameters.environment}}/dracarys-demo-app.yaml
         cat {{inputs.parameters.environment}}/dracarys-demo-app.yaml
         git config user.name "$(cat /.github/user)"
         git config user.email "$(cat /.github/email)"
