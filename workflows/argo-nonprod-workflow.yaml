@@ -23,18 +23,20 @@ spec:
         git clone https://$(cat /.github/token)@github.com/{{inputs.parameters.repo_owner}}/{{inputs.parameters.repo_name}}
         cd {{inputs.parameters.repo_name}}/teams/{{inputs.parameters.team_name}}/
         sleep 2
+        echo {{inputs.parameters.image_owner}}/{{inputs.parameters.image_name}}
         echo BEFORE:
         cat {{inputs.parameters.environment}}/dracarys-demo-app.yaml
         echo AFTER:
-        cat {{inputs.parameters.environment}}/dracarys-demo-app.yaml | sed -e "s@{{inputs.parameters.image_owner}}/{{inputs.parameters.image_name}}:.*@{{inputs.parameters.image_owner}}/{{inputs.parameters.image_name}}:{{inputs.parameters.tag}}@" > {{inputs.parameters.environment}}/dracarys-demo-app.yaml
-        cat {{inputs.parameters.environment}}/dracarys-demo-app.yaml
+        cat {{inputs.parameters.environment}}/dracarys-demo-app.yaml | sed -e "s@{{inputs.parameters.image_owner}}/{{inputs.parameters.image_name}}:.*@{{inputs.parameters.image_owner}}/{{inputs.parameters.image_name}}:{{inputs.parameters.tag}}@" > {{inputs.parameters.environment}}/dracarys-demo-app.yaml.tmp
+        cat {{inputs.parameters.environment}}/dracarys-demo-app.yaml.tmp
+        mv {{inputs.parameters.environment}}/dracarys-demo-app.yaml.tmp {{inputs.parameters.environment}}/dracarys-demo-app.yaml
         git config user.name "$(cat /.github/user)"
         git config user.email "$(cat /.github/email)"
         git add {{inputs.parameters.environment}}/dracarys-demo-app.yaml
         git commit -m "Upgraded {{inputs.parameters.environment}}/dracarys-demo-app.yaml with the tag {{inputs.parameters.tag}}"
         git push
         echo Waiting for ArgoCD app to Sync
-        sleep 20
+        # sleep 10
       volumeMounts:
       - name: github-access
         mountPath: /.github/
@@ -163,7 +165,7 @@ spec:
       command: [sh]
       source: |
         echo This is a testing simulation...
-        sleep 5
+        sleep 10
       volumeMounts:
       - name: github-access
         mountPath: /.github/
